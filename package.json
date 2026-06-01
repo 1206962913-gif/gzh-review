@@ -1,0 +1,12 @@
+{
+  "name": "wechat-publication-review",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "health": "node -e \"fetch('http://127.0.0.1:' + (process.env.PORT || 4173) + '/health').then(r => r.text()).then(console.log)\"",
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

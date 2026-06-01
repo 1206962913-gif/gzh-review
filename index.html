@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>公众号发布前保密审核</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <script src="./sensitive-rules.js" defer></script>
+    <script src="./script.js" defer></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace">
+        <aside class="side-panel" aria-label="审核概览">
+          <div class="brand">
+            <div class="brand-mark" aria-hidden="true">
+              <i data-lucide="shield-check"></i>
+            </div>
+            <div>
+              <h1>发布前保密审核</h1>
+              <p>公众号链接敏感词检测入口</p>
+            </div>
+          </div>
+
+          <div class="status-card">
+            <span class="label">当前状态</span>
+            <strong id="statusText">等待检测</strong>
+            <div class="meter" aria-hidden="true">
+              <span id="riskMeter"></span>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div>
+              <span>命中词</span>
+              <strong id="hitCount">0</strong>
+            </div>
+            <div>
+              <span>风险段落</span>
+              <strong id="paragraphCount">0</strong>
+            </div>
+          </div>
+
+          <div class="rule-box">
+            <h2>检测范围</h2>
+            <ul>
+              <li>经营、市场、价格、质量表述</li>
+              <li>公众号宣传舆情风险口径</li>
+              <li>按词库给出建议替代表述</li>
+            </ul>
+          </div>
+        </aside>
+
+        <section class="main-panel">
+          <header class="topbar">
+            <div>
+              <p class="eyebrow">Official Account Review</p>
+              <h2>输入发布链接，获得修改建议</h2>
+            </div>
+            <button class="icon-button" id="resetButton" type="button" aria-label="清空内容" title="清空内容">
+              <i data-lucide="rotate-ccw"></i>
+            </button>
+          </header>
+
+          <form class="review-form" id="reviewForm">
+            <label for="articleUrl">公众号文章链接</label>
+            <div class="url-row">
+              <input
+                id="articleUrl"
+                name="articleUrl"
+                type="url"
+                placeholder="https://mp.weixin.qq.com/s/..."
+                autocomplete="off"
+                required
+              />
+              <button type="submit">
+                <i data-lucide="scan-search"></i>
+                开始检测
+              </button>
+            </div>
+
+            <label for="articleContent">文章正文</label>
+            <textarea
+              id="articleContent"
+              name="articleContent"
+              rows="9"
+              placeholder="提交链接后会自动读取正文；如临时预览链接需要登录态，可在这里粘贴正文兜底检测。"
+            ></textarea>
+          </form>
+
+          <section class="source-panel" id="sourcePanel" aria-live="polite">
+            <div>
+              <span>读取状态</span>
+              <strong id="sourceTitle">尚未读取链接内容</strong>
+            </div>
+            <dl>
+              <div>
+                <dt>正文字数</dt>
+                <dd id="wordCount">0</dd>
+              </div>
+              <div>
+                <dt>图片数量</dt>
+                <dd id="imageCount">0</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="content-preview" aria-live="polite">
+            <div class="panel-heading">
+              <h3>已读取内容</h3>
+              <span id="sourceUrl">等待链接</span>
+            </div>
+            <div id="articlePreview" class="empty-state">
+              <i data-lucide="newspaper"></i>
+              <p>读取成功后，这里会展示文章正文和图片，便于确认图文内容是否完整。</p>
+            </div>
+          </section>
+
+          <section class="paired-panel" aria-live="polite">
+            <div class="paired-heading">
+              <div>
+                <h3>风险命中</h3>
+                <span id="scanTime">尚未检测</span>
+              </div>
+              <div>
+                <h3>修改建议</h3>
+                <span>逐条对应</span>
+              </div>
+            </div>
+            <div id="pairedResultList" class="empty-state">
+              <i data-lucide="file-search"></i>
+              <p>提交链接后，这里会按“左侧风险、右侧建议”的方式逐条展示。</p>
+            </div>
+          </section>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>
