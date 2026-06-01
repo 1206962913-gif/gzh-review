@@ -195,6 +195,10 @@ function parseXiumiShowInfo(html) {
   return JSON.parse(decodeURIComponent(match[1]));
 }
 
+function isXiumiHost(hostname) {
+  return hostname === "xiumius.cn" || hostname.endsWith(".xiumius.cn") || hostname === "xiumi.us" || hostname.endsWith(".xiumi.us");
+}
+
 function resolveXiumiDataUrl(showInfo, pageUrl) {
   if (!showInfo.show_data_url) {
     throw new Error("秀米预览页缺少正文数据地址");
@@ -257,9 +261,7 @@ function validateTarget(rawUrl) {
     throw new Error("仅支持 http 或 https 链接");
   }
 
-  const allowedHosts = ["mp.weixin.qq.com", "v.xiumius.cn", "c.xiumius.cn"];
-
-  if (!allowedHosts.includes(target.hostname)) {
+  if (target.hostname !== "mp.weixin.qq.com" && !isXiumiHost(target.hostname)) {
     throw new Error("当前仅支持 mp.weixin.qq.com 公众号文章、公众号临时预览链接或秀米预览链接");
   }
 
@@ -328,7 +330,7 @@ async function handleExtract(request, response, requestUrl) {
     });
 
     const html = await upstream.text();
-    const article = target.hostname.endsWith("xiumius.cn")
+    const article = isXiumiHost(target.hostname)
       ? await parseXiumiArticle(html, upstream.url)
       : parseArticle(html, upstream.url);
 
