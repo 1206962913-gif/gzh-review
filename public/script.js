@@ -17,6 +17,10 @@ const wordCount = document.querySelector("#wordCount");
 const imageCount = document.querySelector("#imageCount");
 const sourceUrl = document.querySelector("#sourceUrl");
 const articlePreview = document.querySelector("#articlePreview");
+const copyFeedbackButton = document.querySelector("#copyFeedbackButton");
+const copyStatus = document.querySelector("#copyStatus");
+let latestArticle = null;
+let latestHits = [];
 
 function escapeHtml(value) {
   return value.replace(/[&<>"']/g, (char) => {
@@ -132,6 +136,67 @@ function updateSummary(hits) {
   }).format(new Date());
 }
 
+function buildFeedbackText() {
+  const title = latestArticle?.title || sourceTitle.textContent || "未命名稿件";
+  const url = latestArticle?.url || urlInput.value.trim() || "未提供";
+  const scanAt = scanTime.textContent || "";
+  const lines = [
+    "公众号发布前审核反馈",
+    "",
+    `稿件标题：${title}`,
+    `稿件链接：${url}`,
+    `检测时间：${scanAt}`,
+    `命中数量：${latestHits.length}`,
+    "",
+  ];
+
+  if (latestHits.length === 0) {
+    lines.push("检测结果：未命中当前词库中的敏感表述。");
+    lines.push("提示：仍建议按单位发布流程进行人工复核。");
+    return lines.join("\n");
+  }
+
+  lines.push("风险命中及修改建议：");
+  latestHits.forEach((hit, index) => {
+    lines.push("");
+    lines.push(`${index + 1}. 命中表述：${hit.word}`);
+    lines.push(`   类别：${hit.category || "通用词库"}`);
+    lines.push(`   所在位置：第 ${hit.paragraphIndex} 段`);
+    lines.push(`   原文片段：${hit.paragraph}`);
+    lines.push(`   建议替换表达：${hit.suggestion}`);
+  });
+
+  return lines.join("\n");
+}
+
+function updateCopyState(hits) {
+  latestHits = hits;
+  copyFeedbackButton.disabled = false;
+  copyStatus.textContent = hits.length > 0
+    ? `已生成 ${hits.length} 条反馈，可复制给送检单位。`
+    : "未命中当前词库，也可复制审核结果反馈。";
+}
+
+async function copyFeedback() {
+  const text = buildFeedbackText();
+
+  try {
+    await navigator.clipboard.writeText(text);
+    copyStatus.textContent = "已复制，可直接粘贴给送检单位。";
+  } catch {
+    const helper = document.createElement("textarea");
+    helper.value = text;
+    helper.setAttribute("readonly", "");
+    helper.style.position = "fixed";
+    helper.style.left = "-9999px";
+    document.body.appendChild(helper);
+    helper.select();
+    document.execCommand("copy");
+    document.body.removeChild(helper);
+    copyStatus.textContent = "已复制，可直接粘贴给送检单位。";
+  }
+}
+
 function renderGuidelines() {
   if (publicityGuidelines.length === 0 || pairedResultList.className !== "empty-state") {
     return;
@@ -216,6 +281,7 @@ function runScan(text) {
 
   renderPairedResults(hits);
   updateSummary(hits);
+  updateCopyState(hits);
   renderGuidelines();
 
   if (window.lucide) {
@@ -234,6 +300,7 @@ form.addEventListener("submit", async (event) => {
 
   try {
     const article = await readArticleFromUrl(url);
+    latestArticle = article;
     contentInput.value = article.text;
     showSourceMeta(article);
     renderArticlePreview(article);
@@ -250,6 +317,12 @@ form.addEventListener("submit", async (event) => {
       resetArticlePreview();
     } else {
       showReadError(`${error.message}，已使用粘贴正文检测`);
+      latestArticle = {
+        title: "粘贴正文",
+        url: urlInput.value.trim(),
+        text: fallbackText,
+        images: [],
+      };
       articlePreview.className = "article-body";
       articlePreview.innerHTML = `<div class="article-text">${escapeHtml(fallbackText)}</div>`;
       runScan(fallbackText);
@@ -274,12 +347,18 @@ resetButton.addEventListener("click", () => {
   sourceTitle.textContent = "尚未读取链接内容";
   wordCount.textContent = "0";
   imageCount.textContent = "0";
+  latestArticle = null;
+  latestHits = [];
+  copyFeedbackButton.disabled = true;
+  copyStatus.textContent = "检测完成后，可一键复制风险命中和修改建议。";
   resetArticlePreview();
 
   if (window.lucide) {
     window.lucide.createIcons();
   }
 });
+
+copyFeedbackButton.addEventListener("click", copyFeedback);
 
 window.addEventListener("DOMContentLoaded", () => {
   if (window.lucide) {

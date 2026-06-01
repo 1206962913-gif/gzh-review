@@ -335,7 +335,8 @@ textarea:focus {
 
 .panel,
 .content-preview,
-.paired-panel {
+.paired-panel,
+.feedback-panel {
   min-width: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -348,6 +349,51 @@ textarea:focus {
 
 .content-preview {
   margin-top: 18px;
+}
+
+.feedback-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+  padding: 16px 18px;
+}
+
+.feedback-panel h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.feedback-panel p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.feedback-panel button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  min-width: 124px;
+  height: 42px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.feedback-panel button:disabled {
+  cursor: not-allowed;
+  background: #a8b5c2;
+}
+
+.feedback-panel button:not(:disabled):hover {
+  background: var(--accent-strong);
 }
 
 .panel-heading {
@@ -587,8 +633,18 @@ mark {
   .paired-heading,
   .paired-row,
   .url-row,
-  .source-panel {
+  .source-panel,
+  .feedback-panel {
     grid-template-columns: 1fr;
+  }
+
+  .feedback-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .feedback-panel button {
+    width: 100%;
   }
 
   .paired-heading > div:first-child {
