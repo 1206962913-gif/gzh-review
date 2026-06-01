@@ -52,6 +52,14 @@ Root directory: 留空
 functions
 ```
 
+不要填写 Deploy command。尤其不要填写：
+
+```bash
+npx wrangler deploy
+```
+
+这个项目使用 Cloudflare Pages 的 Git 自动部署，Cloudflare 会自动发布 `public` 目录并识别 `functions` 接口。填写 `npx wrangler deploy` 会把整个仓库当作 Worker 资产上传，可能把 `node_modules` 一起扫进去，导致文件过大失败。
+
 ## 5. 部署完成
 
 部署成功后，Cloudflare 会给一个地址，例如：
