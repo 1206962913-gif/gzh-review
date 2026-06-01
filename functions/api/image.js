@@ -21,11 +21,24 @@ function validateImageTarget(rawUrl) {
     throw new Error("仅支持 http 或 https 链接");
   }
 
-  const allowedHosts = ["mp.weixin.qq.com", "mmbiz.qpic.cn", "mmbiz.qlogo.cn", "thirdwx.qlogo.cn"];
-  const isAllowed = allowedHosts.includes(target.hostname) || target.hostname.endsWith(".qpic.cn");
+  const allowedHosts = [
+    "mp.weixin.qq.com",
+    "mmbiz.qpic.cn",
+    "mmbiz.qlogo.cn",
+    "thirdwx.qlogo.cn",
+    "img.xiumi.us",
+    "statics.xiumi.us",
+    "stc.xiumius.cn",
+    "sd.xiumius.cn",
+  ];
+  const isAllowed =
+    allowedHosts.includes(target.hostname) ||
+    target.hostname.endsWith(".qpic.cn") ||
+    target.hostname.endsWith(".xiumi.us") ||
+    target.hostname.endsWith(".xiumius.cn");
 
   if (!isAllowed) {
-    throw new Error("仅支持微信图文图片地址");
+    throw new Error("仅支持微信或秀米图文图片地址");
   }
 
   return target;

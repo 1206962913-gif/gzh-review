@@ -100,6 +100,49 @@ function extractImages(articleHtml) {
   return images;
 }
 
+function normalizeAssetUrl(value) {
+  if (value.startsWith("//")) {
+    return `https:${value}`;
+  }
+
+  return value;
+}
+
+function collectXiumiContent(value, htmlParts = [], images = []) {
+  if (!value) {
+    return { htmlParts, images };
+  }
+
+  if (typeof value === "string") {
+    if (/<[^>]+>/.test(value)) {
+      htmlParts.push(value);
+    }
+
+    const imagePattern = /(https?:)?\/\/[^\s"'<>]+\.(?:png|jpe?g|gif|webp)(?:\?[^\s"'<>]*)?/gi;
+    let match;
+
+    while ((match = imagePattern.exec(value))) {
+      const image = normalizeAssetUrl(match[0]);
+      if (!images.includes(image)) {
+        images.push(image);
+      }
+    }
+
+    return { htmlParts, images };
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectXiumiContent(item, htmlParts, images));
+    return { htmlParts, images };
+  }
+
+  if (typeof value === "object") {
+    Object.values(value).forEach((item) => collectXiumiContent(item, htmlParts, images));
+  }
+
+  return { htmlParts, images };
+}
+
 function parseArticle(html, finalUrl) {
   const article = pickArticleHtml(html);
   const articleHtml = article.html;
@@ -127,6 +170,67 @@ function parseArticle(html, finalUrl) {
   };
 }
 
+function parseXiumiShowInfo(html) {
+  const match = html.match(
+    /injectedData\.showInfo\s*=\s*JSON\.parse\(decodeURIComponent\("([^"]+)"\)\)/,
+  );
+
+  if (!match || !match[1]) {
+    throw new Error("未能识别秀米预览页的数据地址");
+  }
+
+  return JSON.parse(decodeURIComponent(match[1]));
+}
+
+function resolveXiumiDataUrl(showInfo, pageUrl) {
+  if (!showInfo.show_data_url) {
+    throw new Error("秀米预览页缺少正文数据地址");
+  }
+
+  if (showInfo.show_data_url.startsWith("//")) {
+    return `https:${showInfo.show_data_url}`;
+  }
+
+  return new URL(showInfo.show_data_url, pageUrl).href;
+}
+
+async function parseXiumiArticle(html, finalUrl) {
+  const showInfo = parseXiumiShowInfo(html);
+  const dataUrl = resolveXiumiDataUrl(showInfo, finalUrl);
+  const response = await fetch(dataUrl, {
+    headers: {
+      "Accept": "application/json,text/plain,*/*",
+      "Referer": finalUrl,
+      "User-Agent":
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`秀米正文数据读取失败，状态码 ${response.status}`);
+  }
+
+  const data = await response.json();
+  const { htmlParts, images } = collectXiumiContent(data);
+  const cover = showInfo.cover ? normalizeAssetUrl(showInfo.cover) : "";
+
+  if (cover && !images.includes(cover)) {
+    images.unshift(cover);
+  }
+
+  const text = normalizeText(htmlParts.join("\n"));
+
+  return {
+    title: data.title || showInfo.title || "",
+    author: showInfo.owner?.nickname || "",
+    text,
+    images,
+    hasArticleContainer: text.length > 0,
+    url: finalUrl,
+    wordCount: text.length,
+  };
+}
+
 function validateTarget(rawUrl) {
   let target;
 
@@ -140,8 +244,10 @@ function validateTarget(rawUrl) {
     throw new Error("仅支持 http 或 https 链接");
   }
 
-  if (target.hostname !== "mp.weixin.qq.com") {
-    throw new Error("当前仅支持 mp.weixin.qq.com 公众号文章或临时预览链接");
+  const allowedHosts = ["mp.weixin.qq.com", "v.xiumius.cn", "c.xiumius.cn"];
+
+  if (!allowedHosts.includes(target.hostname)) {
+    throw new Error("当前仅支持 mp.weixin.qq.com 公众号文章、公众号临时预览链接或秀米预览链接");
   }
 
   return target;
@@ -164,7 +270,9 @@ export async function onRequestGet(context) {
     });
 
     const html = await upstream.text();
-    const article = parseArticle(html, upstream.url);
+    const article = target.hostname.endsWith("xiumius.cn")
+      ? await parseXiumiArticle(html, upstream.url)
+      : parseArticle(html, upstream.url);
 
     if (!upstream.ok) {
       return sendJson({ error: `链接读取失败，状态码 ${upstream.status}` }, upstream.status);
