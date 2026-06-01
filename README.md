@@ -20,6 +20,17 @@ http://127.0.0.1:4173/
 http://127.0.0.1:4173/health
 ```
 
+## Cloudflare Pages 部署参数
+
+```text
+Framework preset: None
+Build command: 留空
+Build output directory: public
+Functions directory: functions
+```
+
+部署成功后，Cloudflare Pages 会提供一个 `*.pages.dev` 地址。
+
 ## Koyeb 部署参数
 
 ```text
