@@ -160,6 +160,27 @@ window.sensitiveRules = [
     label: "建议优化",
     suggestion: "提质增效、精益运营",
   },
+  {
+    word: "马钢",
+    category: "企业名称敏感表述",
+    level: "medium",
+    label: "建议优化",
+    suggestion: "相关单位、所属单位、区域单位",
+  },
+  {
+    word: "山钢",
+    category: "企业名称敏感表述",
+    level: "medium",
+    label: "建议优化",
+    suggestion: "相关单位、所属单位、区域单位",
+  },
+  {
+    word: "核心指标",
+    category: "经营指标敏感表述",
+    level: "medium",
+    label: "建议优化",
+    suggestion: "重点工作、关键任务、主要目标",
+  },
 ];
 
 window.publicityGuidelines = [
