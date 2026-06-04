@@ -165,14 +165,14 @@ window.sensitiveRules = [
     category: "企业名称敏感表述",
     level: "medium",
     label: "建议优化",
-    suggestion: "相关单位、所属单位、区域单位",
+    suggestion: "基地公司",
   },
   {
     word: "山钢",
     category: "企业名称敏感表述",
     level: "medium",
     label: "建议优化",
-    suggestion: "相关单位、所属单位、区域单位",
+    suggestion: "基地公司",
   },
   {
     word: "核心指标",
